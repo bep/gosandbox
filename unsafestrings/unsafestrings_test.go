@@ -7,58 +7,64 @@ import (
 )
 
 func BenchmarkSafeBytesToString(b *testing.B) {
-	testBytes := []byte("The quick brown fox jumps over the lazy dog.")
+	var (
+		bt = []byte("The quick brown fox jumps over the lazy dog.")
+		s  string
+	)
 
-	b.ResetTimer()
-	var s string
 	for i := 0; i < b.N; i++ {
-		s = SafeBytesToString(testBytes)
+		s = SafeBytesToString(bt)
 	}
+
 	s = s[:]
 }
 
 func BenchmarkUnsafeBytesToString(b *testing.B) {
-	testBytes := []byte("The quick brown fox jumps over the lazy dog.")
+	var (
+		bt = []byte("The quick brown fox jumps over the lazy dog.")
+		s  string
+	)
 
-	b.ResetTimer()
-	var s string
 	for i := 0; i < b.N; i++ {
-		s = UnsafeBytesToString(testBytes)
+		s = UnsafeBytesToString(bt)
 	}
+
 	s = s[:]
 }
 
 var testString = "The quick brown fox jumps over the lazy dog."
 
 func TestSafeBytesToString(t *testing.T) {
-	testBytes := []byte(testString)
-	s := SafeBytesToString(testBytes)
+	var (
+		b = []byte(testString)
+		s = SafeBytesToString(b)
+	)
 
 	if s != testString {
 		t.Errorf("Expected '%s' was '%s'", testString, s)
 	}
 
-	testBytes[0] = byte('S')
+	b[0] = byte('S')
 
-	if s == string(testBytes) {
-		t.Errorf("Expected '%s' was '%s'", testBytes, s)
+	if s == string(b) {
+		t.Errorf("Expected '%s' was '%s'", b, s)
 	}
-
 }
 
 func TestUnsafeBytesToString(t *testing.T) {
-	testBytes := []byte(testString)
-	s := UnsafeBytesToString(testBytes)
+	var (
+		b = []byte(testString)
+		s = UnsafeBytesToString(b)
+	)
 
 	if s != testString {
 		t.Errorf("Expected '%s' was '%s'", testString, s)
 	}
 
-	testBytes[0] = byte('S')
+	b[0] = byte('S')
 
-	if s != string(testBytes) {
-		t.Errorf("Expected '%s' was '%s'", testBytes, s)
-		t.Errorf("Expected '%s' was '%s'", testBytes, s)
+	if s != string(b) {
+		t.Errorf("Expected '%s' was '%s'", b, s)
 	}
 }
 
@@ -75,15 +81,15 @@ func (w *appendSliceWriter) WriteString(s string) (int, error) {
 }
 
 func BenchmarkUnsafeStringsReplacer(b *testing.B) {
-	testBytes := []byte("The quick brown fox jumps over the lazy dog.")
-	replacer :=
-		strings.NewReplacer("quick", "slow", "brown", "blue", "lazy", "energetic")
+	var (
+		by = []byte("The quick brown fox jumps over the lazy dog.")
+		re = strings.NewReplacer("quick", "slow", "brown", "blue", "lazy", "energetic")
+	)
 
-	buf := make(appendSliceWriter, 0, len(testBytes))
+	buf := make(appendSliceWriter, 0, len(by))
 
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		replacer.WriteString(&buf, UnsafeBytesToString(testBytes))
+		re.WriteString(&buf, UnsafeBytesToString(by))
 		if UnsafeBytesToString(buf) !=
 			"The slow blue fox jumps over the energetic dog." {
 			b.Fatalf("Failed replacement")
@@ -93,16 +99,16 @@ func BenchmarkUnsafeStringsReplacer(b *testing.B) {
 }
 
 func BenchmarkSafeStringsReplacer(b *testing.B) {
-	testBytes := []byte("The quick brown fox jumps over the lazy dog.")
-	replacer :=
-		strings.NewReplacer("quick", "slow", "brown", "blue", "lazy", "energetic")
+	var (
+		by = []byte("The quick brown fox jumps over the lazy dog.")
+		re = strings.NewReplacer("quick", "slow", "brown", "blue", "lazy", "energetic")
+	)
 
-	buf := make(appendSliceWriter, 0, len(testBytes))
+	buf := make(appendSliceWriter, 0, len(by))
 
-	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 
-		replacer.WriteString(&buf, SafeBytesToString(testBytes))
+		re.WriteString(&buf, SafeBytesToString(by))
 		if UnsafeBytesToString(buf) !=
 			"The slow blue fox jumps over the energetic dog." {
 			b.Fatalf("Failed replacement")
@@ -112,12 +118,12 @@ func BenchmarkSafeStringsReplacer(b *testing.B) {
 }
 
 func BenchmarkMultipleBytesReplace(b *testing.B) {
-	testBytes := []byte("The quick brown fox jumps over the lazy dog.")
+	by := []byte("The quick brown fox jumps over the lazy dog.")
 
 	for i := 0; i < b.N; i++ {
 		var replaced []byte
 
-		replaced = bytes.Replace(testBytes, []byte("quick"), []byte("slow"), -1)
+		replaced = bytes.Replace(by, []byte("quick"), []byte("slow"), -1)
 		replaced = bytes.Replace(replaced, []byte("brown"), []byte("blue"), -1)
 		replaced = bytes.Replace(replaced, []byte("lazy"), []byte("energetic"), -1)
 
@@ -128,12 +134,12 @@ func BenchmarkMultipleBytesReplace(b *testing.B) {
 }
 
 func BenchmarkMultiplesStringsReplace(b *testing.B) {
-	testString := "The quick brown fox jumps over the lazy dog."
+	s := "The quick brown fox jumps over the lazy dog."
 
 	for i := 0; i < b.N; i++ {
 		var replaced string
 
-		replaced = strings.Replace(testString, "quick", "slow", -1)
+		replaced = strings.Replace(s, "quick", "slow", -1)
 		replaced = strings.Replace(replaced, "brown", "blue", -1)
 		replaced = strings.Replace(replaced, "lazy", "energetic", -1)
 
@@ -144,10 +150,12 @@ func BenchmarkMultiplesStringsReplace(b *testing.B) {
 }
 
 func BenchmarkAppendString(b *testing.B) {
-	buf := make([]byte, 0, 100)
-	s := "bepsays"
-	b.ResetTimer()
-	var buf2 []byte
+	var (
+		buf  = make([]byte, 0, 100)
+		buf2 []byte
+		s    = "bepsays"
+	)
+
 	for i := 0; i < b.N; i++ {
 		buf2 = append(buf, s...)
 	}
@@ -155,10 +163,12 @@ func BenchmarkAppendString(b *testing.B) {
 }
 
 func BenchmarkAppendByteString(b *testing.B) {
-	buf := make([]byte, 0, 100)
-	s := "bepsays"
-	b.ResetTimer()
-	var buf2 []byte
+	var (
+		buf  = make([]byte, 0, 100)
+		buf2 []byte
+		s    = "bepsays"
+	)
+
 	for i := 0; i < b.N; i++ {
 		buf2 = append(buf, []byte(s)...)
 	}
